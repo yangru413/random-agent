@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VALORANT 隨機特務抽選器</title>
     <style>
-        /* CSS Reset & Variables */
         :root {
             --bg-primary: #0F1923;
             --bg-secondary: #1B2733;
@@ -37,11 +36,9 @@
             margin: 0 auto;
         }
 
-        /* Header Styles */
         header {
             text-align: center;
             margin-bottom: 24px;
-            padding: 0 10px;
         }
 
         h1 {
@@ -69,7 +66,6 @@
             font-size: 0.95rem;
         }
 
-        /* Main Layout Grid */
         .main-layout {
             display: grid;
             grid-template-columns: 1fr;
@@ -82,7 +78,6 @@
             }
         }
 
-        /* Card Panels */
         .panel {
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
@@ -102,12 +97,10 @@
             padding-bottom: 8px;
         }
 
-        /* Wheel Section */
         .wheel-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative;
         }
 
         .wheel-wrapper {
@@ -138,7 +131,6 @@
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
         }
 
-        /* Controls & Buttons */
         .btn-group {
             display: flex;
             gap: 10px;
@@ -157,15 +149,19 @@
             cursor: pointer;
             transition: all 0.2s ease;
             border-radius: 2px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
         }
 
         .btn:hover:not(:disabled) {
             background-color: var(--border-color);
             border-color: var(--text-secondary);
+        }
+
+        .btn.active {
+            border-color: var(--accent-red);
+            background-color: rgba(255, 70, 85, 0.2);
         }
 
         .btn-primary {
@@ -197,7 +193,6 @@
             margin-bottom: 10px;
         }
 
-        /* Result Section */
         .result-box {
             margin-top: 15px;
             width: 100%;
@@ -207,12 +202,6 @@
             text-align: center;
             border-radius: 4px;
             display: none;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .result-box.active {
@@ -241,7 +230,6 @@
             margin-bottom: 10px;
         }
 
-        /* Selection Panel */
         .filter-section {
             margin-bottom: 15px;
         }
@@ -292,12 +280,8 @@
         }
 
         .agent-card:not(.selected) {
-            opacity: 0.5;
-            filter: grayscale(50%);
-        }
-
-        .agent-card:hover {
-            opacity: 1;
+            opacity: 0.4;
+            filter: grayscale(60%);
         }
 
         .agent-avatar {
@@ -317,7 +301,6 @@
             width: 100%;
         }
 
-        /* History Panel */
         .history-list {
             list-style: none;
             max-height: 200px;
@@ -357,11 +340,10 @@
             font-size: 0.75rem;
         }
 
-        /* Loading & Error States */
         .status-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(15, 25, 35, 0.9);
+            background-color: rgba(15, 25, 35, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -385,21 +367,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        /* Scrollbar customization */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-primary);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-secondary);
-        }
     </style>
 </head>
 <body>
@@ -411,7 +378,7 @@
     </header>
 
     <div class="main-layout">
-        <!-- Left Column: Wheel & Result -->
+        <!-- 轉盤與結果區域 -->
         <div class="panel">
             <div class="panel-title">
                 <span>隨機轉盤</span>
@@ -435,7 +402,6 @@
                 </div>
             </div>
 
-            <!-- History Section -->
             <div style="margin-top: 24px;">
                 <div class="panel-title" style="font-size: 1rem;">
                     <span>本次抽選紀錄</span>
@@ -446,7 +412,7 @@
             </div>
         </div>
 
-        <!-- Right Column: Agent Selection -->
+        <!-- 特務選取區域 -->
         <div class="panel">
             <div class="status-overlay" id="statusOverlay">
                 <div class="spinner"></div>
@@ -458,68 +424,52 @@
                 <span id="selectedCount" style="font-size: 0.85rem; color: var(--accent-red);">已選取 0 / 0 名特務</span>
             </div>
 
-            <!-- Global Action Controls -->
+            <!-- 全局按鈕 -->
             <div class="btn-group">
                 <button id="selectAllBtn" class="btn">全選</button>
-                <button id="deselectAllBtn" class="btn">取消全選</button>
-                <button id="resetBtn" class="btn">重置選取</button>
+                <button id="resetBtn" class="btn">全部重置</button>
             </div>
 
-            <!-- Role Batch Selection -->
+            <!-- 定位批次選取 -->
             <div class="filter-section">
                 <div class="filter-title">按定位批次選取：</div>
                 <div class="btn-group">
-                    <button class="btn role-btn" data-role="Duelist">決鬥者</button>
-                    <button class="btn role-btn" data-role="Initiator">先鋒</button>
-                    <button class="btn role-btn" data-role="Controller">控場者</button>
-                    <button class="btn role-btn" data-role="Sentinel">哨衛</button>
+                    <button class="btn role-btn" data-role="決鬥者">決鬥者</button>
+                    <button class="btn role-btn" data-role="先鋒">先鋒</button>
+                    <button class="btn role-btn" data-role="控場者">控場者</button>
+                    <button class="btn role-btn" data-role="哨衛">哨衛</button>
                 </div>
             </div>
 
-            <!-- Role View Filter -->
+            <!-- 顯示篩選 -->
             <div class="filter-section">
                 <div class="filter-title">顯示檢視篩選：</div>
                 <div class="btn-group">
-                    <button class="btn filter-btn active" data-filter="ALL" style="border-color: var(--accent-red);">全部顯示</button>
-                    <button class="btn filter-btn" data-filter="Duelist">決鬥者</button>
-                    <button class="btn filter-btn" data-filter="Initiator">先鋒</button>
-                    <button class="btn filter-btn" data-filter="Controller">控場者</button>
-                    <button class="btn filter-btn" data-filter="Sentinel">哨衛</button>
+                    <button class="btn filter-btn active" data-filter="ALL">全部顯示</button>
+                    <button class="btn filter-btn" data-filter="決鬥者">決鬥者</button>
+                    <button class="btn filter-btn" data-filter="先鋒">先鋒</button>
+                    <button class="btn filter-btn" data-filter="控場者">控場者</button>
+                    <button class="btn filter-btn" data-filter="哨衛">哨衛</button>
                 </div>
             </div>
 
-            <!-- Agent Cards Grid -->
+            <!-- 特務清單 -->
             <div id="agentGrid" class="agent-grid"></div>
         </div>
     </div>
 </div>
 
 <script>
-/**
- * VALORANT Agent Randomizer
- * 採用單一全域 Application State 管理狀態，確保繪製與資料邏輯解耦。
- */
-
-// 1. Application State
 const state = {
-    agents: [],          // 所有 API 取得的特務資料
-    selectedUuids: new Set(), // 目前勾選的特務 UUID 集合
-    images: {},          // 快取已載入的 Image 物件
-    isSpinning: false,   // 是否正在旋轉中
-    currentRotation: 0,  // 轉盤目前角度 (弧度)
-    history: [],         // 本次 session 歷史紀錄
-    activeFilter: 'ALL'  // 目前顯示面板的篩選定位
+    agents: [],
+    selectedUuids: new Set(),
+    images: {},
+    isSpinning: false,
+    currentRotation: 0,
+    history: [],
+    activeFilter: 'ALL'
 };
 
-// 角色定位中文對照
-const ROLE_NAMES = {
-    'Duelist': '決鬥者',
-    'Initiator': '先鋒',
-    'Controller': '控場者',
-    'Sentinel': '哨衛'
-};
-
-// DOM 元素引用
 const canvas = document.getElementById('wheelCanvas');
 const ctx = canvas.getContext('2d');
 const spinBtn = document.getElementById('spinBtn');
@@ -535,7 +485,6 @@ const resultRole = document.getElementById('resultRole');
 const statusOverlay = document.getElementById('statusOverlay');
 const statusText = document.getElementById('statusText');
 
-// 2. Fetch Data & Initialization
 async function initApp() {
     try {
         const response = await fetch('https://valorant-api.com/v1/agents?language=zh-TW&isPlayableCharacter=true');
@@ -544,29 +493,18 @@ async function initApp() {
         const data = await response.json();
         if (!data.data || !Array.isArray(data.data)) throw new Error('資料結構不符合預期');
 
-        // 過濾並正規化特務資料
         state.agents = data.data.map(agent => ({
             uuid: agent.uuid,
             displayName: agent.displayName,
-            // 優先選用選角介面風格頭像 displayIcon / displayIconSmall
             icon: agent.displayIconSmall || agent.displayIcon || '',
-            roleName: agent.role ? agent.role.displayName : '未知定位',
-            roleKey: agent.role ? agent.role.developerName : 'Unknown'
+            roleName: agent.role ? agent.role.displayName : '其他'
         }));
 
-        // 預設全選所有特務
         selectAllAgents();
-        
-        // 預先預載圖片
         preloadImages();
 
-        // 隱藏載入中遮罩
         statusOverlay.style.display = 'none';
-
-        // 綁定事件監聽
         setupEventListeners();
-        
-        // 初次渲染
         renderAgentGrid();
         updateUI();
 
@@ -576,25 +514,23 @@ async function initApp() {
     }
 }
 
-// 預載圖檔並快取至 state.images
 function preloadImages() {
     state.agents.forEach(agent => {
         if (agent.icon) {
             const img = new Image();
-            img.crossOrigin = 'anonymous'; // 避免 Canvas 污染問題
+            img.crossOrigin = 'anonymous';
             img.src = agent.icon;
             img.onload = () => {
                 state.images[agent.uuid] = img;
-                drawWheel(); // 圖片載入完成後重新繪製轉盤
+                drawWheel();
             };
             img.onerror = () => {
-                state.images[agent.uuid] = null; // 載入失敗註記
+                state.images[agent.uuid] = null;
             };
         }
     });
 }
 
-// 3. Wheel Drawing Engine (Canvas)
 function drawWheel() {
     const activeAgents = getActiveAgents();
     const width = canvas.width;
@@ -605,7 +541,6 @@ function drawWheel() {
 
     ctx.clearRect(0, 0, width, height);
 
-    // 空狀態處理
     if (activeAgents.length === 0) {
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
@@ -619,7 +554,7 @@ function drawWheel() {
         ctx.font = '16px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('無特務選取', centerX, centerY);
+        ctx.fillText('請選擇特務', centerX, centerY);
         return;
     }
 
@@ -627,62 +562,58 @@ function drawWheel() {
     const sliceAngle = (2 * Math.PI) / numSlices;
 
     activeAgents.forEach((agent, index) => {
-        // 角度計算 (加上目前的總旋轉角度)
         const startAngle = state.currentRotation + index * sliceAngle - Math.PI / 2;
         const endAngle = startAngle + sliceAngle;
 
-        // 繪製扇區背景
+        // 繪製扇形背景
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.arc(centerX, centerY, radius, startAngle, endAngle);
         ctx.closePath();
-
-        // 雙色交替背景
         ctx.fillStyle = (index % 2 === 0) ? '#233140' : '#1B2733';
         ctx.fill();
-
-        // 扇區邊框線
         ctx.lineWidth = 1;
         ctx.strokeStyle = 'rgba(255, 70, 85, 0.4)';
         ctx.stroke();
 
-        // 繪製頭像/名稱
+        // 繪製特務頭像與名稱（修正轉向：頭像底邊朝向中心）
         ctx.save();
         ctx.translate(centerX, centerY);
-        ctx.rotate(startAngle + sliceAngle / 2);
+        
+        // 旋轉至扇區中心角，並額外加 90 度讓頭像底部指向轉盤中心點
+        const midAngle = startAngle + sliceAngle / 2;
+        ctx.rotate(midAngle + Math.PI / 2);
 
         const img = state.images[agent.uuid];
-        const iconSize = numSlices > 16 ? 24 : 36;
-        const iconRadius = radius * 0.65;
+        const iconSize = numSlices > 16 ? 28 : 38;
+        const iconPosY = -radius * 0.65; // 計算在旋轉後的 y 軸偏移位置
 
         if (img && img.complete && img.naturalWidth !== 0) {
-            // 繪製圓形裁切頭像
             ctx.save();
             ctx.beginPath();
-            ctx.arc(iconRadius, 0, iconSize / 2, 0, Math.PI * 2);
+            ctx.arc(0, iconPosY, iconSize / 2, 0, Math.PI * 2);
             ctx.clip();
-            ctx.drawImage(img, iconRadius - iconSize / 2, -iconSize / 2, iconSize, iconSize);
+            ctx.drawImage(img, -iconSize / 2, iconPosY - iconSize / 2, iconSize, iconSize);
             ctx.restore();
         } else {
-            // 圖檔載入失敗或載入中之文字備援
             ctx.fillStyle = '#FFFFFF';
             ctx.font = '12px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(agent.displayName.substring(0, 2), iconRadius, 0);
+            ctx.fillText(agent.displayName.substring(0, 2), 0, iconPosY);
         }
 
         ctx.restore();
     });
 
-    // 繪製外框圓圈 (珊瑚紅)
+    // 繪製外框
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
     ctx.lineWidth = 4;
     ctx.strokeStyle = '#FF4655';
     ctx.stroke();
 
-    // 繪製轉盤中心點裝飾
+    // 繪製中心點
     ctx.beginPath();
     ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
     ctx.fillStyle = '#0F1923';
@@ -692,7 +623,6 @@ function drawWheel() {
     ctx.stroke();
 }
 
-// 4. Spin Logic
 function spinWheel() {
     const activeAgents = getActiveAgents();
     if (activeAgents.length === 0 || state.isSpinning) return;
@@ -701,39 +631,31 @@ function spinWheel() {
     updateUI();
     resultBox.classList.remove('active');
 
-    // 隨機選定獲勝索引
     const selectedIndex = Math.floor(Math.random() * activeAgents.length);
     const winningAgent = activeAgents[selectedIndex];
 
     const numSlices = activeAgents.length;
     const sliceAngle = (2 * Math.PI) / numSlices;
 
-    // 計算指針停留在獲勝扇區正中央所需的位置
-    // 指針固定在正上方 (-Math.PI / 2)
     const targetSliceCenter = selectedIndex * sliceAngle + sliceAngle / 2;
-    
-    // 隨機旋轉 5~8 圈
     const extraRounds = 5 + Math.floor(Math.random() * 3);
     const targetRotation = extraRounds * Math.PI * 2 + (2 * Math.PI - targetSliceCenter);
 
     const startTime = performance.now();
-    const duration = 2500; // 2.5 秒動畫
+    const duration = 2500;
     const startRotation = state.currentRotation % (Math.PI * 2);
 
     function animate(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-
-        // Ease Out Cubic 緩動函數
         const easeOut = 1 - Math.pow(1 - progress, 3);
+        
         state.currentRotation = startRotation + (targetRotation - startRotation) * easeOut;
-
         drawWheel();
 
         if (progress < 1) {
             requestAnimationFrame(animate);
         } else {
-            // 動畫結束
             state.isSpinning = false;
             showResult(winningAgent);
             addHistory(winningAgent);
@@ -744,7 +666,6 @@ function spinWheel() {
     requestAnimationFrame(animate);
 }
 
-// 5. State Management & Actions
 function getActiveAgents() {
     return state.agents.filter(a => state.selectedUuids.has(a.uuid));
 }
@@ -765,15 +686,14 @@ function toggleAgent(uuid) {
     }
 }
 
-function selectRoleBatch(roleKey) {
+function selectRoleBatch(roleName) {
     state.agents.forEach(a => {
-        if (a.roleKey === roleKey) {
+        if (a.roleName === roleName) {
             state.selectedUuids.add(a.uuid);
         }
     });
 }
 
-// 6. UI Render Functions
 function updateUI() {
     const activeAgents = getActiveAgents();
     const count = activeAgents.length;
@@ -781,7 +701,6 @@ function updateUI() {
 
     selectedCountEl.textContent = `已選取 ${count} / ${total} 名特務`;
 
-    // 按鈕狀態控制
     if (count === 0) {
         spinBtn.disabled = true;
         tipMessage.textContent = '請先勾選特務以開始抽選';
@@ -793,7 +712,6 @@ function updateUI() {
         tipMessage.textContent = '';
     }
 
-    // 更新特務卡片選擇樣式
     document.querySelectorAll('.agent-card').forEach(card => {
         const uuid = card.dataset.uuid;
         if (state.selectedUuids.has(uuid)) {
@@ -811,7 +729,7 @@ function renderAgentGrid() {
 
     const filteredAgents = state.agents.filter(agent => {
         if (state.activeFilter === 'ALL') return true;
-        return agent.roleKey === state.activeFilter;
+        return agent.roleName === state.activeFilter;
     });
 
     filteredAgents.forEach(agent => {
@@ -824,7 +742,7 @@ function renderAgentGrid() {
         img.src = agent.icon;
         img.alt = agent.displayName;
         img.onerror = () => {
-            img.style.display = 'none'; // 圖片載入失敗時降級顯示
+            img.style.display = 'none';
         };
 
         const name = document.createElement('div');
@@ -847,19 +765,13 @@ function renderAgentGrid() {
 function showResult(agent) {
     resultAvatar.src = agent.icon;
     resultName.textContent = agent.displayName;
-    resultRole.textContent = `定位：${ROLE_NAMES[agent.roleKey] || agent.roleName}`;
+    resultRole.textContent = `定位：${agent.roleName}`;
     resultBox.classList.add('active');
 }
 
 function addHistory(agent) {
     const timeStr = new Date().toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    
-    state.history.unshift({
-        agent,
-        time: timeStr,
-        id: Date.now()
-    });
-
+    state.history.unshift({ agent, time: timeStr });
     renderHistory();
 }
 
@@ -881,26 +793,16 @@ function renderHistory() {
     `).join('');
 }
 
-// 7. Event Listeners Setup
 function setupEventListeners() {
     spinBtn.addEventListener('click', spinWheel);
     reSpinBtn.addEventListener('click', spinWheel);
 
-    // 全選
     document.getElementById('selectAllBtn').addEventListener('click', () => {
         if (state.isSpinning) return;
         selectAllAgents();
         updateUI();
     });
 
-    // 取消全選
-    document.getElementById('deselectAllBtn').addEventListener('click', () => {
-        if (state.isSpinning) return;
-        deselectAllAgents();
-        updateUI();
-    });
-
-    // 重置選取 (只重置選取，保留歷史紀錄)
     document.getElementById('resetBtn').addEventListener('click', () => {
         if (state.isSpinning) return;
         deselectAllAgents();
@@ -908,7 +810,7 @@ function setupEventListeners() {
         updateUI();
     });
 
-    // 定位批次勾選
+    // 修正：按定位批次選取
     document.querySelectorAll('.role-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             if (state.isSpinning) return;
@@ -918,7 +820,7 @@ function setupEventListeners() {
         });
     });
 
-    // 檢視區域篩選
+    // 修正：顯示檢視篩選
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -929,7 +831,6 @@ function setupEventListeners() {
     });
 }
 
-// 頁面載入完成後啟動
 window.addEventListener('DOMContentLoaded', initApp);
 </script>
 </body>
